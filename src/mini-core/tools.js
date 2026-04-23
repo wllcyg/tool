@@ -88,4 +88,24 @@ const runBashCommand = {
   },
 };
 
-export const allTools = [readFile, writeFile, runBashCommand];
+// 列出目录
+const listDirectory = {
+  name: "list_directory",
+  description: "列出目录下的文件",
+  schema: z.object({
+    path: z.string().optional().describe("要列出的目录路径（默认当前目录）"),
+  }),
+  func: async ({ path }) => {
+    try {
+      const dir = path || process.cwd();
+      console.log(`---> 工具执行: list_directory ${dir}`);
+      const files = await fs.readdir(dir);
+      return `目录 ${dir} 下的文件:
+${files.join("\n")}`;
+    } catch (error) {
+      return `列出目录失败: ${error.message}`;
+    }
+  },
+};
+
+export const allTools = [readFile, writeFile, runBashCommand, listDirectory];
