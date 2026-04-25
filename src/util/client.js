@@ -71,17 +71,29 @@ class Client {
   /**
    * 封装 Agent 运行循环
    * @param {string} userInput 用户输入的消息
+   * @param {number} maxIterations 最大迭代次数，防止死循环
    */
-  async chat(userInput) {
+  async chat(userInput, maxIterations = 30) {
     if (userInput) {
       this.addMessage(userInput, "user");
     }
 
     let res = await this.invoke();
+    let iterations = 0;
 
     // ReAct 循环
-    while (res.tool_calls && res.tool_calls.length > 0) {
+    while (
+      res.tool_calls &&
+      res.tool_calls.length > 0 &&
+      iterations < maxIterations
+    ) {
+      iterations++;
+      console.log(`\n🛠️  AI 决定调用 ${res.tool_calls.length} 个工具...`);
+
       for (const toolCall of res.tool_calls) {
+        console.log(
+          `   └─ [调用] ${toolCall.name}，参数: ${JSON.stringify(toolCall.args)}`,
+        );
         const selectedToolFn = this.toolMap[toolCall.name];
         if (selectedToolFn) {
           try {
@@ -107,6 +119,11 @@ class Client {
       }
       res = await this.invoke();
     }
+
+    if (iterations >= maxIterations) {
+      console.warn(`\n⚠️ 警告：已达到最大迭代次数 (${maxIterations})，强制停止。`);
+    }
+
     return res;
   }
 }

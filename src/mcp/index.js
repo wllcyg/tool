@@ -58,7 +58,7 @@ server.registerResource(
         {
           uri: "docs://guide",
           mimeType: "text/plain",
-          content: `MCP Server 使用指南,功能：提供用户查询等工具。使用：在 Cursor 等 MCP Client 中通过自然语言对话，Cursor 会自动调用相应工具。`,
+          text: `MCP Server 使用指南,功能：提供用户查询等工具。使用：在 Cursor 等 MCP Client 中通过自然语言对话，Cursor 会自动调用相应工具。`,
         },
       ],
     };
