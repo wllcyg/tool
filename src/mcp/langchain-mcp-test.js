@@ -8,6 +8,21 @@ const mcpClient = new MultiServerMCPClient({
       command: "node",
       args: ["/Users/moliang/Desktop/coder/tool-test/src/mcp/index.js"],
     },
+    "amap-maps": {
+      url: `https://mcp.amap.com/mcp?key=${process.env.AMAP_MAPS_API_KEY}`,
+    },
+    filesystem: {
+      command: "npx",
+      args: [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/moliang/Desktop/coder",
+      ],
+    },
+    "chrome-devtools": {
+      command: "npx",
+      args: ["-y", "chrome-devtools-mcp@latest"],
+    },
   },
 });
 
@@ -42,4 +57,6 @@ async function runChat(params) {
   await mcpClient.close();
 }
 
-runChat("MCP Server 的使用指南是什么");
+runChat(
+  "北京南站附近的酒店，最近的 3 个酒店，拿到酒店图片，打开浏览器，展示每个酒店的图片，每个 tab 一个 url 展示，并且在把那个页面标题改为酒店名",
+);

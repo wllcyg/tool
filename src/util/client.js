@@ -8,10 +8,11 @@ import {
 } from "@langchain/core/messages";
 
 class Client {
-  constructor(apiKey, modelName, baseURL) {
+  constructor(apiKey, modelName, baseURL, maxIterations = 30) {
     this.apiKey = apiKey;
     this.modelName = modelName;
     this.baseURL = baseURL;
+    this.maxIterations = maxIterations;
     this.model = null;
     this.messages = [];
     this.tools = [];
@@ -73,7 +74,7 @@ class Client {
    * @param {string} userInput 用户输入的消息
    * @param {number} maxIterations 最大迭代次数，防止死循环
    */
-  async chat(userInput, maxIterations = 30) {
+  async chat(userInput, maxIterations = this.maxIterations) {
     if (userInput) {
       this.addMessage(userInput, "user");
     }
@@ -97,11 +98,20 @@ class Client {
         const selectedToolFn = this.toolMap[toolCall.name];
         if (selectedToolFn) {
           try {
-            const result = await selectedToolFn(toolCall.args);
+            const toolResult = await selectedToolFn(toolCall.args);
+            let contentStr;
+            if (typeof toolResult === "string") {
+              contentStr = toolResult;
+            } else if (toolResult && toolResult.text) {
+              // 如果返回对象有 text 字段，优先使用
+              contentStr = toolResult.text;
+            } else {
+              contentStr = JSON.stringify(toolResult);
+            }
+
             this.addMessage(
               {
-                content:
-                  typeof result === "string" ? result : JSON.stringify(result),
+                content: contentStr,
                 tool_call_id: toolCall.id,
               },
               "tool",
@@ -121,7 +131,9 @@ class Client {
     }
 
     if (iterations >= maxIterations) {
-      console.warn(`\n⚠️ 警告：已达到最大迭代次数 (${maxIterations})，强制停止。`);
+      console.warn(
+        `\n⚠️ 警告：已达到最大迭代次数 (${maxIterations})，强制停止。`,
+      );
     }
 
     return res;
