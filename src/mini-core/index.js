@@ -33,53 +33,30 @@ client.addMessage(
   "user",
 );
 
-// 执行 AI 循环
-async function runAgent(message) {
-  // 添加用的输入
-  client.addMessage(message, "user");
 
-  // 第一次请求
-  let res = await client.invoke();
-
-  // 如果有工具调用，进入处理流程
-  while (res.tool_calls && res.tool_calls.length > 0) {
-    for (const toolCall of res.tool_calls) {
-      const selectedToolFn = client.toolMap[toolCall.name];
-      if (selectedToolFn) {
-        // 执行工具
-        const result = await selectedToolFn(toolCall.args);
-        // 回传结果
-        client.addMessage(
-          {
-            content: result,
-            tool_call_id: toolCall.id,
-          },
-          "tool",
-        );
-      }
-    }
-    // 处理完一轮工具后，再次询问 AI
-    res = await client.invoke();
-  }
-
-  console.log("AI 最终回复:", res.content);
+// 简单的封装一个运行函数
+async function run(task) {
+  console.log("\n🚀 开始任务:", task);
+  const res = await client.chat(task);
+  console.log("\n✅ AI 最终回复:", res.content);
 }
 
-runAgent(`创建一个功能丰富的 React TodoList 应用：
+// 执行任务
+await run(`创建一个功能丰富的 React TodoList 应用：
 
 1. 创建项目：echo -e "n\nn" | pnpm create vite react-todo-app --template react-ts
 2. 修改 src/App.tsx，实现完整功能的 TodoList：
- - 添加、删除、编辑、标记完成
- - 分类筛选（全部/进行中/已完成）
- - 统计信息显示
- - localStorage 数据持久化
+  - 添加、删除、编辑、标记完成
+  - 分类筛选（全部/进行中/已完成）
+  - 统计信息显示
+  - localStorage 数据持久化
 3. 添加复杂样式：
- - 渐变背景（蓝到紫）
- - 卡片阴影、圆角
- - 悬停效果
+  - 渐变背景（蓝到紫）
+  - 卡片阴影、圆角
+  - 悬停效果
 4. 添加动画：
- - 添加/删除时的过渡动画
- - 使用 CSS transitions
+ - 添加/删除时的过渡动画
+ - 使用 CSS transitions
 5. 列出目录确认
 
 注意：使用 pnpm，功能要完整，样式要美观，要有动画效果

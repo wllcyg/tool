@@ -67,6 +67,48 @@ class Client {
       this.messages.push(msg);
     }
   }
+
+  /**
+   * 封装 Agent 运行循环
+   * @param {string} userInput 用户输入的消息
+   */
+  async chat(userInput) {
+    if (userInput) {
+      this.addMessage(userInput, "user");
+    }
+
+    let res = await this.invoke();
+
+    // ReAct 循环
+    while (res.tool_calls && res.tool_calls.length > 0) {
+      for (const toolCall of res.tool_calls) {
+        const selectedToolFn = this.toolMap[toolCall.name];
+        if (selectedToolFn) {
+          try {
+            const result = await selectedToolFn(toolCall.args);
+            this.addMessage(
+              {
+                content:
+                  typeof result === "string" ? result : JSON.stringify(result),
+                tool_call_id: toolCall.id,
+              },
+              "tool",
+            );
+          } catch (error) {
+            this.addMessage(
+              {
+                content: `Error: ${error.message}`,
+                tool_call_id: toolCall.id,
+              },
+              "tool",
+            );
+          }
+        }
+      }
+      res = await this.invoke();
+    }
+    return res;
+  }
 }
 
 export default Client;
