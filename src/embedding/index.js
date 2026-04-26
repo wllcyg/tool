@@ -4,7 +4,7 @@ import { config } from "dotenv";
 import { client } from "../util/index.js";
 import documents from "./documents.js";
 import chalk from "chalk";
-
+import { getPageContent } from "../loader/index.js";
 config();
 
 const embeddings = new OpenAIEmbeddings({
@@ -15,14 +15,14 @@ const embeddings = new OpenAIEmbeddings({
   },
 });
 
-const vectorStore = await MemoryVectorStore.fromDocuments(
-  documents,
-  embeddings,
-);
+const doc = await getPageContent();
+console.log("我们获取到到了 几个文档", doc.length);
+
+const vectorStore = await MemoryVectorStore.fromDocuments(doc, embeddings);
 
 const retrieve = vectorStore.asRetriever({ k: 3 });
 
-const query = "请介绍万亮";
+const query = "AI 是不是来淘汰老程序员的?";
 
 const startchart = async (question) => {
   console.log(chalk.blue.bold("\n[问题]"), chalk.cyan(question));
@@ -33,7 +33,9 @@ const startchart = async (question) => {
   console.log(chalk.green("完成"));
 
   // 构建 prompt
-  const context = retrievedDocs.map((doc) => `姓名：${doc.metadata.character}\n简介：${doc.pageContent}`).join("\n\n");
+  const context = retrievedDocs
+    .map((doc) => `姓名：${doc.metadata.character}\n简介：${doc.pageContent}`)
+    .join("\n\n");
   const prompt = `
     你是一个档案管理员,根据以下档案内容回答用户的问题：
     档案内容: ${context}
@@ -41,7 +43,7 @@ const startchart = async (question) => {
     请根据以上档案内容回答用户的问题。
   `;
   await client.addMessage(prompt, "user");
-  
+
   process.stdout.write(chalk.yellow("AI 正在思考... "));
   const response = await client.invoke();
   console.log(chalk.green("完成\n"));
