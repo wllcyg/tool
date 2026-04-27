@@ -1,10 +1,19 @@
 import mivlusClient from "./mivlus/index.js";
 import embeddingsService from "./embedding/index.js";
 import { DataType, MetricType, IndexType } from "@zilliz/milvus2-sdk-node";
+import { COLLECTION_NAME } from "./mivlus/index.js";
+import Client from "./util/client.js";
+import { UserPrompt } from "./prompt/index.js";
 import data from "./data.js";
-const COLLECTION_NAME = "ai_diary";
+
+
+
+const agent = new Client({
+  apiKey: process.env.OPENAI_API_KEY,
+})
+
 const VECTOR_DIM = 1024;
-async function start() {
+async function start(question: string) {
   try {
     console.log("start connecting to Milvus");
     await mivlusClient.connect();
@@ -62,10 +71,38 @@ async function start() {
       collection_name: COLLECTION_NAME,
       data: embeddings,
     });
+
+    // 获取数据,先向量化 再查询
+    const queryVec = await embeddingsService.embedQuery(question);
+    const search = await mivlusClient.Search({ vectors: queryVec });
+    if (search.results && search.results.length > 0) {
+      const context = search.results
+        .map((diary, i) => {
+          return `[日记 ${i + 1}]
+日期: ${diary.date}
+心情: ${diary.mood}
+标签: ${diary.tags?.join(", ")}
+内容: ${diary.content}`;
+        })
+        .join("\n\n━━━━━\n\n");
+
+      console.log('AI 开始回答!!!!!!');
+
+      const res = await agent.chat(UserPrompt(context, question));
+      console.log(res.content);
+
+    } else {
+      console.log("No results found");
+    }
     console.log(`✓ Inserted ${insertResult.insert_cnt} records\n`);
   } catch (error) {
     console.error("Failed to connect to Milvus:", error);
   }
 }
 
-start();
+
+function main() {
+  start('我最近做了什么让我感到快乐的事情？');
+}
+
+main();

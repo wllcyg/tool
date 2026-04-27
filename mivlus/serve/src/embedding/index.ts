@@ -1,4 +1,3 @@
-import 'dotenv/config'
 import { OpenAIEmbeddings } from '@langchain/openai';
 
 

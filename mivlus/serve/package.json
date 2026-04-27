@@ -5,15 +5,17 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'node --loader ts-node/esm' src/index.ts",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'node --env-file=.env --loader ts-node/esm' src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@langchain/core": "^1.1.41",
     "@langchain/openai": "^1.4.4",
     "@zilliz/milvus2-sdk-node": "^2.6.13",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
