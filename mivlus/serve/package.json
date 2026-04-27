@@ -11,7 +11,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@zilliz/milvus2-sdk-node": "^2.6.13"
+    "@langchain/openai": "^1.4.4",
+    "@zilliz/milvus2-sdk-node": "^2.6.13",
+    "dotenv": "^17.4.2"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

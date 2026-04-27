@@ -1,2 +1,4 @@
 .env
 node_modules
+mivlus/volumes/
+mivlus/serve/dist/
