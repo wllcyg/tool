@@ -18,16 +18,28 @@ export class MilvusVectorStore {
   // 初始化 client 实例
   public client: MilvusClient;
 
-  private constructor(address: string = "localhost:19530") {
+  private constructor() {
+    const mode = process.env.MILVUS_MODE || "local";
+    
+    // 根据模式选取连接地址和 Token
+    const address = mode === "cloud" 
+      ? (process.env.MILVUS_CLOUD_ADDRESS || "") 
+      : (process.env.MILVUS_LOCAL_ADDRESS || "localhost:19530");
+      
+    const token = mode === "cloud" 
+      ? process.env.MILVUS_CLOUD_TOKEN 
+      : undefined;
+
     this.client = new MilvusClient({
-      address: address,
+      address,
+      token,
     });
   }
 
   /** @internal */
-  public static getInstance(address: string = "localhost:19530"): MilvusVectorStore {
+  public static getInstance(): MilvusVectorStore {
     if (!MilvusVectorStore.instance) {
-      MilvusVectorStore.instance = new MilvusVectorStore(address);
+      MilvusVectorStore.instance = new MilvusVectorStore();
     }
     return MilvusVectorStore.instance;
   }
@@ -89,10 +101,8 @@ export class MilvusVectorStore {
   }
 }
 
-export const initMilvusVectorStore = (
-  address: string = "localhost:19530",
-): MilvusVectorStore => {
-  return MilvusVectorStore.getInstance(address);
+export const initMilvusVectorStore = (): MilvusVectorStore => {
+  return MilvusVectorStore.getInstance();
 };
 
 export const milvusStore = MilvusVectorStore.getInstance();

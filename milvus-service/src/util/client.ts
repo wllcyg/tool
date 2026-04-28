@@ -181,6 +181,26 @@ class Client {
 
     return res;
   }
+
+  /**
+   * 简单的流式聊天输出，不支持中间工具调用的细节，只管单次生成
+   */
+  async *streamChat(userInput?: string): AsyncGenerator<string, void, unknown> {
+    if (userInput) {
+      this.addMessage(userInput, "user");
+    }
+
+    if (!this.model) {
+      throw new Error("请先创建模型");
+    }
+
+    const stream = await this.model.stream(this.messages);
+    for await (const chunk of stream) {
+      if (chunk.content) {
+        yield chunk.content as string;
+      }
+    }
+  }
 }
 
 export default Client;
