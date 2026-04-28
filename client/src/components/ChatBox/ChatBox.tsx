@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import type { ChangeEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Card, Input, Button } from 'animal-island-ui'
 import { fetchChatStream } from '../../services/chatApi'
+import { FileUpload } from '../FileUpload/FileUpload'
 import './ChatBox.css'
 
 /** 单条消息类型 */
@@ -258,6 +259,7 @@ export default function ChatBox() {
             onClear={() => setInputValue('')}
           />
         </div>
+        <FileUpload />
         <Button
           type="primary"
           size="large"

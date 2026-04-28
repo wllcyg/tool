@@ -1,0 +1,4 @@
+
+const COLLECTION_NAME_EBOOK = "ebook";
+const VECTOR_DIM = 1024;
+export { COLLECTION_NAME_EBOOK, VECTOR_DIM };

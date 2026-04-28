@@ -33,6 +33,7 @@ export class MilvusVectorStore {
     this.client = new MilvusClient({
       address,
       token,
+      ssl: mode === "cloud",
     });
   }
 

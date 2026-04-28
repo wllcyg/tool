@@ -1,0 +1,24 @@
+.file-upload-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
+.upload-icon-button {
+  width: 50px !important;
+  height: 50px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: var(--ai-bg-content) !important;
+  border: 3px solid var(--ai-border) !important;
+  box-shadow: 0 4px 0 var(--ai-shadow-btn) !important;
+}
+
+.upload-icon-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--ai-shadow-btn) !important;
+}
