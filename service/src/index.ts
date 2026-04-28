@@ -69,7 +69,7 @@ async function initMilvus() {
   }
 }
 
-// initMilvus().catch(console.error);
+initMilvus().catch(console.error);
 
 router.get("/chat/stream", async (ctx) => {
   const question = ctx.query.question as string;

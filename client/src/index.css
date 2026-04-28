@@ -1,0 +1,67 @@
+/*
+ * 全局基础样式 — animal-island-ui 风格
+ * Token 参考: docs/SKILL.md
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* 动森色彩 Token */
+  --ai-bg: #f8f8f0;
+  --ai-bg-content: rgb(247, 243, 223);
+  --ai-text: #725d42;
+  --ai-text-title: #794f27;
+  --ai-text-secondary: #9f927d;
+  --ai-text-muted: #8a7b66;
+  --ai-primary: #19c8b9;
+  --ai-primary-hover: #3dd4c6;
+  --ai-focus-yellow: #ffcc00;
+  --ai-border: #c4b89e;
+  --ai-shadow-btn: #bdaea0;
+  --ai-shadow-input: #d4c9b4;
+  --ai-success: #6fba2c;
+  --ai-error: #e05a5a;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: Nunito, 'Noto Sans SC', 'Zen Maru Gothic',
+    -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: var(--ai-text);
+  background: var(--ai-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3, h4 {
+  color: var(--ai-text-title);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+a {
+  color: var(--ai-primary);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--ai-primary-hover);
+}

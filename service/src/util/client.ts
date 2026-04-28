@@ -58,6 +58,12 @@ class Client {
         baseURL: this.baseURL,
       },
       temperature,
+      streaming: true, // 显式开启流式模式
+      // qwen3 系列默认开启思考模式，会导致生成结束前 content 一直为空
+      // 设置 enable_thinking: false 关闭思考模式，恢复逐 token 流式输出
+      modelKwargs: {
+        enable_thinking: false,
+      },
     });
   }
 
@@ -184,6 +190,7 @@ class Client {
 
   /**
    * 简单的流式聊天输出，不支持中间工具调用的细节，只管单次生成
+   * 兼容 qwen3 思考模式（reasoning_content 阶段 content 为空）
    */
   async *streamChat(userInput?: string): AsyncGenerator<string, void, unknown> {
     if (userInput) {
@@ -196,8 +203,11 @@ class Client {
 
     const stream = await this.model.stream(this.messages);
     for await (const chunk of stream) {
-      if (chunk.content) {
-        yield chunk.content as string;
+      // qwen3 在思考阶段 content 为空，最终回答才有 content
+      // 直接 yield 有值的 content 片段，跳过空字符串
+      const text = typeof chunk.content === "string" ? chunk.content : "";
+      if (text) {
+        yield text;
       }
     }
   }
