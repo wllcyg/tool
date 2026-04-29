@@ -3,7 +3,7 @@
  * 封装与后端 /chat/stream 端点的通信
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 /** SSE chunk 解析后的数据 */
 export interface ChatChunk {

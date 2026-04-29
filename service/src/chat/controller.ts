@@ -5,6 +5,8 @@ import embeddingsService from "../embedding/index.js";
 import Client from "../util/client.js";
 import { UserPrompt } from "../prompt/index.js";
 
+import { COLLECTION_NAME_EBOOK, SIMILARITY_THRESHOLD } from "../contance/index.js";
+
 const router = new Router();
 
 const agent = new Client({
@@ -35,20 +37,38 @@ router.get("/chat/stream", async (ctx) => {
 
   try {
     const queryVec = await embeddingsService.embedQuery(question);
-    const search = await milvusStore.Search({ vectors: queryVec });
+    
+    // 1. 并行搜索日记和电子书集合
+    const [diarySearch, ebookSearch] = await Promise.all([
+      milvusStore.Search({ vectors: queryVec }), // 默认是 ai_diary
+      milvusStore.Search({ vectors: queryVec, collection_name: COLLECTION_NAME_EBOOK })
+    ]);
+
     let context = "";
-    if (search.results && search.results.length > 0) {
-      context = search.results
+
+    // 2. 提取并格式化日记内容
+    const filteredDiaries = (diarySearch.results || []).filter(res => res.score > SIMILARITY_THRESHOLD);
+    if (filteredDiaries.length > 0) {
+      const diaryText = filteredDiaries
         .map((diary, i) => {
-          return `[日记 ${i + 1}]
-日期: ${diary.date}
-心情: ${diary.mood}
-标签: ${diary.tags?.join(", ")}
-内容: ${diary.content}`;
+          return `[日记资源 ${i + 1}] 日期: ${diary.date}, 内容: ${diary.content}`;
         })
-        .join("\n\n━━━━━\n\n");
+        .join("\n");
+      context += "【个人日记相关信息】\n" + diaryText + "\n\n";
     }
 
+    // 3. 提取并格式化电子书内容
+    const filteredEbooks = (ebookSearch.results || []).filter(res => res.score > SIMILARITY_THRESHOLD);
+    if (filteredEbooks.length > 0) {
+      const ebookText = filteredEbooks
+        .map((ebook, i) => {
+          return `[小说资源 ${i + 1}] 书名: ${ebook.book_name}, 章节: ${ebook.chapter_num}, 索引: ${ebook.index}, 内容: ${ebook.content}`;
+        })
+        .join("\n");
+      context += "【小说书籍相关信息】\n" + ebookText;
+    }
+
+    // 4. 将混合上下文发送给 AI
     const promptStr = UserPrompt(context, question);
     const streamIter = agent.streamChat(promptStr);
 

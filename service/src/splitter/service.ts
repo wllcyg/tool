@@ -1,8 +1,9 @@
+import { parse } from 'path';
 import { EPubLoader } from "@langchain/community/document_loaders/fs/epub";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import milvusStore, { COLLECTION_NAME } from "../milvus/index.js";
+import milvusStore from "../milvus/index.js";
 import embeddingsService from "../embedding/index.js";
-
+import { COLLECTION_NAME_EBOOK, BOOK_ID } from "../contance/index.js";
 export class SplitterService {
   /**
    * 处理 EPUB 文件：加载、分段、向量化并存储
@@ -10,42 +11,58 @@ export class SplitterService {
    */
   async processEpub(filePath: string) {
     console.log(`Processing EPUB: ${filePath}`);
-    
+    const bookName = parse(filePath).name;
+    const bookId = String(BOOK_ID);
+
     // 1. 加载文件
-    const loader = new EPubLoader(filePath);
+    const loader = new EPubLoader(filePath, { splitChapters: true });
     const docs = await loader.load();
-    
-    // 2. 文本分段
+    const cleanDocs = docs.filter(doc =>
+      doc.pageContent.length > 10 && !doc.pageContent.includes('.html#')
+    );
+
     const splitter = new RecursiveCharacterTextSplitter({
+      separators: ['\n\n', '\n', '。', '！', '？', ' ', ''],
       chunkSize: 500,
       chunkOverlap: 50,
     });
-    const splitDocs = await splitter.splitDocuments(docs);
-    console.log(`Split into ${splitDocs.length} chunks`);
 
-    // 3. 向量化并准备数据
-    const dataToInsert = await Promise.all(
-      splitDocs.map(async (doc) => {
-        const vector = await embeddingsService.embedQuery(doc.pageContent);
-        return {
-          content: doc.pageContent,
-          date: new Date().toISOString().split('T')[0],
-          mood: "Neutral",
-          tags: ["epub-upload"],
-          vector: vector,
-        };
-      })
-    );
+    let totalInserted = 0;
+    for (let i = 0; i < cleanDocs.length; i++) {
+      const chapterNum = i + 1;
+      const chunks = await splitter.splitText(cleanDocs[i].pageContent);
+      if (chunks.length === 0) {
+        continue;
+      }
 
-    // 4. 插入 Milvus
-    const result = await milvusStore.Insert({
-      collection_name: COLLECTION_NAME,
-      data: dataToInsert,
-    });
+      console.log(`  Chapter ${chapterNum}/${cleanDocs.length}: ${chunks.length} chunks`);
 
-    console.log(`✓ Inserted ${result.insert_cnt} chunks into Milvus`);
+      // 批量向量化
+      const vectors = await embeddingsService.embedDocuments(chunks);
+
+      // 构建与 AI_EBOOK_SCHEMA 对应的插入数据
+      const insertData = chunks.map((content, chunkIndex) => ({
+        id: `${bookId}_${chapterNum}_${chunkIndex}`,
+        book_id: bookId,
+        book_name: bookName,
+        chapter_num: chapterNum,
+        index: chunkIndex,
+        content,
+        vector: vectors[chunkIndex],
+      }));
+
+      const result = await milvusStore.Insert({
+        collection_name: COLLECTION_NAME_EBOOK,
+        data: insertData,
+      });
+
+      const inserted = Number(result.insert_cnt) || 0;
+      totalInserted += inserted;
+      console.log(`  ✓ Inserted ${inserted} records (total: ${totalInserted})`);
+    }
+
     return {
-      count: result.insert_cnt
+      count: totalInserted,
     };
   }
 
@@ -57,7 +74,7 @@ export class SplitterService {
     console.log(`Loading EPUB from: ${filePath}`);
     const loader = new EPubLoader(filePath);
     const docs = await loader.load();
-    
+
     // 返回读取到的原始文档数据
     return docs.map(doc => ({
       pageContent: doc.pageContent,

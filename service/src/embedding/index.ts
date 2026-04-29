@@ -34,8 +34,22 @@ export class EmbeddingsService {
         return this.embedding.embedQuery(query);
     }
 
-    async embedDocuments(documents: string[]): Promise<number[][]> {
-        return this.embedding.embedDocuments(documents);
+    /**
+     * 将文档数组转换为向量，内部自动处理分批以绕过 API 限制 (默认每批 10 条)
+     */
+    async embedDocuments(documents: string[], batchSize: number = 10): Promise<number[][]> {
+        if (documents.length <= batchSize) {
+            return this.embedding.embedDocuments(documents);
+        }
+
+        let results: number[][] = [];
+        for (let i = 0; i < documents.length; i += batchSize) {
+            const batch = documents.slice(i, i + batchSize);
+            console.log(`[Embeddings] Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(documents.length / batchSize)}...`);
+            const batchVectors = await this.embedding.embedDocuments(batch);
+            results = results.concat(batchVectors);
+        }
+        return results;
     }
 }
 
