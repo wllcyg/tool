@@ -21,6 +21,7 @@
     "dotenv": "^17.4.2",
     "epub2": "^3.0.2",
     "html-to-text": "^9.0.5",
+    "js-tiktoken": "^1.0.21",
     "koa": "^3.2.0",
     "koa-body": "^7.0.1",
     "koa-bodyparser": "^4.4.1",
